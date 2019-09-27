@@ -73,10 +73,10 @@ VB菜单栏->管理->虚拟介质管理->选中需修改为多重加载的虚拟
 
 **网卡配置情况：**
 
-* Kali-Attacker的网卡配置情况：
+* Kali-Attacker的网卡配置情况：  
 ![kali-attacker-netcard](./images/kali-attacker-netcard.png)  
 
-* Debian-Gateway的网卡配置情况：
+* Debian-Gateway的网卡配置情况：  
 ![debian-netcard](./images/debian-netcard.png)  
 
 * Kali-Victim-1的网卡配置情况：  
@@ -85,7 +85,7 @@ VB菜单栏->管理->虚拟介质管理->选中需修改为多重加载的虚拟
 * XP-Victim-1的网卡配置情况：  
 ![xp-victim-1-netcard](./images/xp-victim-1-netcard.png)  
 
-**靶机ping攻击者：（仅截取了部分)**  
+**靶机（kali)ping攻击者：（仅截取了部分)**  
 ![靶机ping攻击者](./images/VictimkaliPingAttacker.png)  
 与此同时令网关监听自身的内部网络1网络端口：  
 ![网关监听自身的内部网络1网络端口](./images/DebianListen1.png)  
@@ -100,7 +100,7 @@ VB菜单栏->管理->虚拟介质管理->选中需修改为多重加载的虚拟
 ![网关监听自身的NAT网络端口](./images/DebianListen2.png)  
 *上网查阅得：NAT联网方式下，主机被虚拟为10.0.2.1，192.168.1.1为常见的路由器登陆IP地址。但10.0.2.3为未知，从tcpdump的抓包结果来看，网关虚拟机向路由器登陆地址发送了某些消息并广播询问了主机的MAC地址。（？？？）*
 
-**网关ping靶机：**  
+**网关ping靶机（kali)：**  
 ![网关ping靶机](./images/DebianPingVictimkali.png)  
 同时，令靶机监听自身的内部网络端口（截图仅显示了部分结果）：  
 ![靶机监听自身的内部网络端口](./images/VictimListen3.png)  
@@ -109,6 +109,20 @@ VB菜单栏->管理->虚拟介质管理->选中需修改为多重加载的虚拟
 ![网关ping攻击者](./images/DebianPingAttacker.png)  
 同时，令攻击者监听自身的NAT网络端口（截图仅显示了部分结果）：  
 ![攻击者监听自身的NAT网络端口](./images/AttackerListen2.png)  
+
+**靶机（XP,internet1）ping靶机（kali,internet1):**  
+![XPPingKali-XP](./images/XPPingKali-XP.png)  
+同时令网关监听内网1网络端口：  
+![XPPingKali-XP](./images/XPPingKali-debian.png)  
+以及kali对自身内网1网络端口的监听：  
+![XPPingKali-XP](./images/XPPingKali-Kali.png)
+
+**靶机（XP,internet2）ping靶机（kali,internet1):**  
+![XP2PingKali-XP](./images/XP2PingKali-XP.png)  
+同时令网关对内网2网络端口进行监听：  
+![XP2PingKali-debian](./images/XP2PingKali-debian.png)  
+及令接收方kali进行监听：  
+![XP2PingKali-kali](./images/XP2PingKali-kali.png)  
 
 **攻击者访问互联网：**  
 ![攻击者访问互联网](./images/AttackerOut.png)  
@@ -120,12 +134,26 @@ VB菜单栏->管理->虚拟介质管理->选中需修改为多重加载的虚拟
 **网关访问互联网：**  
 ![网关访问互联网](./images/DebianOut.png)  
 
+## 实验总结
+
+* 靶机可以直接访问攻击者主机  
+靶机ping攻击者主机的过程中，分别对网关、攻击者方进行了监听，均监听到有数据流动，这说明了靶机和攻击者在网络层的连通性。
+* 攻击者主机无法直接访问靶机  
+攻击者反向ping靶机时，再次对网关、靶机方进行了监听，均无回应。也是NAT网络特点的体现。
+* 网关可以直接访问攻击者主机和靶机  
+网关分别ping攻击者和靶机，再对二者（作为接收方）分别监听，均有回应。说明彼此在网络层连通。
+* 靶机的所有对外上下行流量必须经过网关  
+在第一个问题的解释中已经说明了一部分。另，使另一靶机XPping靶机kali，执行同样操作，在网关和kali处均收到回复。证明了网关的传输连接作用。在实践中使用的是同一内网1（internet1）中的XP来ping靶机kali，此时由于在同一内网，所以监听有回复。而在尝试中也使用了内网2（internet2)中的XP来ping靶机kali，此时则失败，这也体现了内部网络的仅内网中可连通的网络连通性特点。  
+此处指向查阅的网站->[please click me](https://blog.csdn.net/ning521513/article/details/78441392)
+* 所有节点均可以访问互联网  
+分别令靶机kali、靶机XP、攻击者和网关执行ping baidu.com和ping 8.8.8.8两个操作，均收到回复，也排除了域名服务器设置出错的问题。
+
 ## 出现的问题及解决
 
 **1.虚拟机安装的虚拟硬盘多重加载失败**  
 虚拟机安装完之后且建立了快照备份时，上述操作将失败，将报错称因当前的虚拟硬盘拥有不止一个子硬盘而修改失败，此时需将当前的所有备份快照删除然后再进行虚拟硬盘类型修改，将提示需释放该虚拟硬盘，释放后再在虚拟机的设置->存储->控制器->添加虚拟硬盘->选择现有的虚拟盘的虚拟硬盘列表中选中目标虚拟硬盘即可。
 
-**2.DHCP设置**
+**2.DHCP设置**  
 ![网络不可用](./images/problem1.png)  
 需要执行以下操作：  
 ![DHCP解决](./images/problem1-solve.png)  
